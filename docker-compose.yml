@@ -1,0 +1,13 @@
+services:
+  poll:
+    build: .
+    ports:
+      - "3010:3010"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "3010"
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

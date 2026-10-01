@@ -1,0 +1,67 @@
+{
+  "pageTitle": "Sustainable Future Poll",
+  "dir": "ltr",
+  "digitPad": "0",
+  "submitArrow": "→",
+  "switchLanguageLabel": "العربية",
+  "switchLanguageAria": "Switch to Arabic",
+  "brand": "Invest in the Future",
+  "initiative": "Sustainable Investment Initiative",
+  "oman": "OMAN",
+  "ministry": "Ministry of Agriculture, Fisheries Wealth and Water Resources",
+  "footer": "INVEST IN A SUSTAINABLE FUTURE",
+  "vision": "OMAN · 2040",
+  "eyebrow": "Your perspective",
+  "question": "What should define our sustainable future?",
+  "lead": "Choose the priority you believe will have the greatest impact on Oman’s future.",
+  "hint": "Select one answer to continue",
+  "submit": "Submit vote",
+  "sending": "Submitting…",
+  "thanks": "Thank you for your vote.",
+  "thanksLead": "Your perspective is part of a more sustainable future for Oman.",
+  "recorded": "Your vote has been recorded.",
+  "once": "One voice. One choice. A shared future.",
+  "resultsEyebrow": "Collective vision",
+  "resultsTitle": "Your priorities for the future",
+  "resultsLead": "A live reflection of what matters most to our participants.",
+  "votes": "votes",
+  "collected": "votes collected",
+  "live": "Live · updates every 3 seconds",
+  "offline": "Connection interrupted · reconnecting…",
+  "empty": "A shared future starts with the first vote.",
+  "error": "Unable to connect. Please try again.",
+  "retry": "Try again",
+  "loading": "Connecting…",
+  "choices": [
+    {
+      "id": "energy",
+      "title": "Renewable Energy",
+      "description": "Clean power & solar innovation"
+    },
+    {
+      "id": "water",
+      "title": "Water Security",
+      "description": "Protecting our most vital resource"
+    },
+    {
+      "id": "food",
+      "title": "Food Innovation",
+      "description": "Resilient agriculture & production"
+    },
+    {
+      "id": "marine",
+      "title": "Marine Economy",
+      "description": "Sustainable fisheries & oceans"
+    },
+    {
+      "id": "technology",
+      "title": "Smart Technology",
+      "description": "Data, automation & innovation"
+    },
+    {
+      "id": "communities",
+      "title": "Green Communities",
+      "description": "People-centered sustainable cities"
+    }
+  ]
+}
