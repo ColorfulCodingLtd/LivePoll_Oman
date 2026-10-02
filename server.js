@@ -88,7 +88,8 @@ export async function createApp({ dataDir = process.env.DATA_DIR || path.join(ro
         '/styles.css': ['public', 'styles.css', 'text/css; charset=utf-8'],
         '/config_en.json': ['config', 'config_en.json', 'application/json; charset=utf-8'],
         '/config_ar.json': ['config', 'config_ar.json', 'application/json; charset=utf-8'],
-        '/logo.jpg': ['public', 'logo.jpg', 'image/jpeg']
+        '/logo.jpg': ['public', 'logo.jpg', 'image/jpeg'],
+        '/qr-code.png': ['public', 'qr-code.png', 'image/png']
       };
       const file = files[url.pathname];
       if (!file) return json(404, { error: 'not_found' });

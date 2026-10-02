@@ -33,7 +33,7 @@ function render() {
   language.textContent = text('switchLanguageLabel');
   language.setAttribute('aria-label', text('switchLanguageAria'));
   if (isResults) {
-    main.innerHTML = `<section class="results"><div class="eyebrow">${html('resultsEyebrow')}</div><h1>${html('resultsTitle')}</h1><p class="lead">${html('resultsLead')}</p><div class="total-votes"><span class="live-dot"></span><span id="total"></span></div><div id="cloud" class="cloud" aria-label="${html('resultsTitle')}"></div><p id="connection" class="connection" role="status"></p></section>`;
+    main.innerHTML = `<section class="results"><div class="eyebrow">${html('resultsEyebrow')}</div><h1>${html('resultsTitle')}</h1><p class="lead">${html('resultsLead')}</p><div class="total-votes"><span class="live-dot"></span><span id="total"></span></div><div id="cloud" class="cloud" aria-label="${html('resultsTitle')}"></div><p id="connection" class="connection" role="status"></p><aside class="qr-card"><img src="/qr-code.png" alt=""><p class="qr-caption" lang="en">Scan the QR code to vote</p><p class="qr-caption" lang="ar" dir="rtl">امسح رمز QR للتصويت</p></aside></section>`;
     updateCloud(); return;
   }
   if (voted) {
@@ -65,7 +65,7 @@ function updateCloud() {
   const total = document.querySelector('#total');
   if (!total) return;
   total.textContent = data ? `${number(data.total)} ${text('collected')}` : text('loading');
-  document.querySelector('#connection').textContent = text(connected ? 'live' : 'offline');
+  document.querySelector('#connection').textContent = connected ? '' : text('offline');
   document.querySelector('.live-dot').classList.toggle('offline', !connected);
   const cloud = document.querySelector('#cloud');
   if (!data) return;
@@ -90,7 +90,7 @@ function updateCloud() {
     word.classList.toggle('gold', rank === 1 || rank === 5);
     word.classList.toggle('dark', rank === 3);
   });
-  document.querySelector('#connection').textContent = !connected ? text('offline') : data.total ? text('live') : `${text('empty')} ${text('live')}`;
+  document.querySelector('#connection').textContent = !connected ? text('offline') : data.total ? '' : text('empty');
 }
 async function poll() {
   try { data = await (await api('/api/results')).json(); connected = true; } catch { connected = false; }

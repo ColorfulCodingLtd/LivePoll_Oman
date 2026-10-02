@@ -31,7 +31,7 @@ test('votes validate, deduplicate concurrent requests, persist, and keep data pr
     const other = await fetch(`${base}/api/session`);
     assert.equal((await post('water', other.headers.get('set-cookie').split(';')[0])).status, 201);
     assert.equal((await fetch(`${base}/data/votes.json`)).status, 404);
-    for (const page of ['/vote', '/results', '/styles.css', '/app.js', '/config_en.json', '/config_ar.json', '/logo.jpg']) assert.equal((await fetch(base + page)).status, 200);
+    for (const page of ['/vote', '/results', '/styles.css', '/app.js', '/config_en.json', '/config_ar.json', '/logo.jpg', '/qr-code.png']) assert.equal((await fetch(base + page)).status, 200);
     const en = await (await fetch(`${base}/config_en.json`)).json();
     const ar = await (await fetch(`${base}/config_ar.json`)).json();
     const ids = choices => choices.map(choice => choice.id).sort();
