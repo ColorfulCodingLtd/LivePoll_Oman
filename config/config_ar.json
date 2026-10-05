@@ -34,34 +34,34 @@
   "loading": "جارٍ الاتصال…",
   "choices": [
     {
-      "id": "energy",
-      "title": "الطاقة المتجددة",
-      "description": "الطاقة النظيفة والابتكار في الطاقة الشمسية"
+      "id": "safe_pathways",
+      "title": "ممرات آمنة",
+      "description": ""
     },
     {
-      "id": "water",
-      "title": "الأمن المائي",
-      "description": "حماية موردنا الأكثر أهمية"
+      "id": "environment",
+      "title": "البيئة",
+      "description": ""
     },
     {
-      "id": "food",
-      "title": "الابتكار الغذائي",
-      "description": "زراعة وإنتاج أكثر مرونة"
+      "id": "safety",
+      "title": "السلامة",
+      "description": ""
     },
     {
-      "id": "marine",
-      "title": "الاقتصاد البحري",
-      "description": "مصايد أسماك ومحيطات مستدامة"
+      "id": "landscaping",
+      "title": "التشجير",
+      "description": ""
     },
     {
-      "id": "technology",
-      "title": "التكنولوجيا الذكية",
-      "description": "البيانات والأتمتة والابتكار"
+      "id": "smart_technologies",
+      "title": "التقنيات الذكية",
+      "description": ""
     },
     {
-      "id": "communities",
-      "title": "المجتمعات الخضراء",
-      "description": "مدن مستدامة محورها الإنسان"
+      "id": "accessible_pathways",
+      "title": "ممرات لذوي الإعاقة",
+      "description": ""
     }
   ]
 }

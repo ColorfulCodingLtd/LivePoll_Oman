@@ -34,34 +34,34 @@
   "loading": "Connecting…",
   "choices": [
     {
-      "id": "energy",
-      "title": "Renewable Energy",
-      "description": "Clean power & solar innovation"
+      "id": "safe_pathways",
+      "title": "Safe Pathways",
+      "description": ""
     },
     {
-      "id": "water",
-      "title": "Water Security",
-      "description": "Protecting our most vital resource"
+      "id": "environment",
+      "title": "Environment",
+      "description": ""
     },
     {
-      "id": "food",
-      "title": "Food Innovation",
-      "description": "Resilient agriculture & production"
+      "id": "safety",
+      "title": "Safety",
+      "description": ""
     },
     {
-      "id": "marine",
-      "title": "Marine Economy",
-      "description": "Sustainable fisheries & oceans"
+      "id": "landscaping",
+      "title": "Landscaping",
+      "description": ""
     },
     {
-      "id": "technology",
-      "title": "Smart Technology",
-      "description": "Data, automation & innovation"
+      "id": "smart_technologies",
+      "title": "Smart Technologies",
+      "description": ""
     },
     {
-      "id": "communities",
-      "title": "Green Communities",
-      "description": "People-centered sustainable cities"
+      "id": "accessible_pathways",
+      "title": "Accessible Pathways for People with Disabilities",
+      "description": ""
     }
   ]
 }
