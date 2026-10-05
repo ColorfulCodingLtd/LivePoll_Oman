@@ -4,12 +4,15 @@ let lang = new URLSearchParams(location.search).get('lang');
 if (!['en', 'ar'].includes(lang)) { try { lang = localStorage.getItem('poll_language'); } catch {} }
 if (!['en', 'ar'].includes(lang)) lang = 'en';
 const isResults = location.pathname === '/results';
+const isFeedback = location.pathname === '/feedback';
 document.body.classList.toggle('results-page', isResults);
 const main = document.querySelector('#main');
-let selected = null, voted = false, ready = false, busy = false, failed = false, data = null, connected = true, started = false;
+let selected = null, voted = false, ready = false, busy = false, failed = false, data = null, connected = true, started = false, feedbackSent = false;
+const feedbackDraft = { email: '', name: '', comment: '' };
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const text = key => config[key];
 const html = key => esc(text(key));
+const textLink = (path, key) => `<p class="comment-link"><a href="${esc(path)}?lang=${esc(lang)}">${html(key)}</a></p>`;
 const number = value => new Intl.NumberFormat(lang).format(value);
 async function api(url, options) {
   const response = await fetch(url, { ...options, signal: AbortSignal.timeout(8000) });
@@ -27,21 +30,35 @@ async function loadConfig(code) {
 function render() {
   document.documentElement.lang = lang;
   document.documentElement.dir = config.dir;
-  document.title = text('pageTitle');
+  document.title = isFeedback ? text('commentLink') : text('pageTitle');
   document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = text(el.dataset.i18n));
   const language = document.querySelector('#language');
   language.textContent = text('switchLanguageLabel');
   language.setAttribute('aria-label', text('switchLanguageAria'));
+  if (isFeedback) {
+    if (feedbackSent) {
+      main.innerHTML = `<section class="thank-you"><div class="thank-mark" aria-hidden="true">✓</div><h1 tabindex="-1">${html('feedbackThanks')}</h1><p class="lead">${html('feedbackThanksLead')}</p>${textLink('/vote', 'backToPoll')}</section>`;
+      return;
+    }
+    main.innerHTML = `<section class="feedback"><div class="eyebrow">${html('feedbackEyebrow')}</div><h1 id="feedback-title">${html('commentLink')}</h1><p class="lead">${html('feedbackLead')}</p><form class="feedback-form"><label class="field">${html('emailLabel')}<input type="email" name="email" required maxlength="254" autocomplete="email" inputmode="email" value="${esc(feedbackDraft.email)}" ${!ready || busy ? 'disabled' : ''}></label><label class="field">${html('nameLabel')}<input name="name" required maxlength="120" autocomplete="name" value="${esc(feedbackDraft.name)}" ${!ready || busy ? 'disabled' : ''}></label><label class="field">${html('commentLabel')}<textarea name="comment" required maxlength="2000" rows="6" ${!ready || busy ? 'disabled' : ''}>${esc(feedbackDraft.comment)}</textarea></label><button class="primary-btn" ${!ready || busy ? 'disabled' : ''}>${html(busy ? 'feedbackSending' : 'feedbackSubmit')}</button><p class="error" role="status">${failed ? html(ready ? 'feedbackError' : 'error') : !ready ? html('loading') : ''}</p>${failed && !ready ? `<button type="button" id="retry" class="language">${html('retry')}</button>` : ''}</form>${textLink('/vote', 'backToPoll')}</section>`;
+    const form = main.querySelector('form');
+    const syncDraft = () => { feedbackDraft.email = form.email.value; feedbackDraft.name = form.name.value; feedbackDraft.comment = form.comment.value; };
+    form.addEventListener('input', syncDraft);
+    form.addEventListener('change', syncDraft);
+    form.addEventListener('submit', sendFeedback);
+    main.querySelector('#retry')?.addEventListener('click', feedbackSession);
+    return;
+  }
   if (isResults) {
     main.innerHTML = `<section class="results"><div class="eyebrow">${html('resultsEyebrow')}</div><h1>${html('resultsTitle')}</h1><p class="lead">${html('resultsLead')}</p><div class="total-votes"><span class="live-dot"></span><span id="total"></span></div><div id="cloud" class="cloud" aria-label="${html('resultsTitle')}"></div><p id="connection" class="connection" role="status"></p><aside class="qr-card"><img src="/qr-code.png" alt=""><p class="qr-caption" lang="en">Scan the QR code to vote</p><p class="qr-caption" lang="ar" dir="rtl">امسح رمز QR للتصويت</p></aside></section>`;
     updateCloud(); return;
   }
   if (voted) {
-    main.innerHTML = `<section class="thank-you"><div class="thank-mark" aria-hidden="true">✓</div><div class="eyebrow">${html('recorded')}</div><h1 tabindex="-1">${html('thanks')}</h1><p class="lead">${html('thanksLead')}</p><p class="once">${html('once')}</p></section>`;
+    main.innerHTML = `<section class="thank-you"><div class="thank-mark" aria-hidden="true">✓</div><div class="eyebrow">${html('recorded')}</div><h1 tabindex="-1">${html('thanks')}</h1><p class="lead">${html('thanksLead')}</p><p class="once">${html('once')}</p>${textLink('/feedback', 'commentLink')}</section>`;
     return;
   }
   const answers = config.choices.map((choice, i) => `<label class="answer"><input type="radio" name="choice" value="${esc(choice.id)}" ${selected === choice.id ? 'checked' : ''} ${!ready || busy ? 'disabled' : ''}><span class="answer-index">${esc(number(i + 1).padStart(2, config.digitPad))}</span><span class="answer-copy"><strong>${esc(choice.title)}</strong>${choice.description ? `<small>${esc(choice.description)}</small>` : ''}</span><span class="answer-check" aria-hidden="true"></span></label>`).join('');
-  main.innerHTML = `<section class="poll"><div class="eyebrow">${html('eyebrow')}</div><h1 id="question">${html('question')}</h1><p class="lead">${html('lead')}</p><form><fieldset aria-labelledby="question"><legend class="sr-only">${html('hint')}</legend><div class="answers">${answers}</div></fieldset><div class="submit-row"><p class="vote-hint">${html('hint')}</p><button class="primary-btn" ${!selected || !ready || busy ? 'disabled' : ''}>${html(busy ? 'sending' : 'submit')} <span aria-hidden="true">${html('submitArrow')}</span></button></div><p class="error" role="status">${failed ? html('error') : !ready ? html('loading') : ''}</p>${failed && !ready ? `<button type="button" id="retry" class="language">${html('retry')}</button>` : ''}</form></section>`;
+  main.innerHTML = `<section class="poll"><div class="eyebrow">${html('eyebrow')}</div><h1 id="question">${html('question')}</h1><p class="lead">${html('lead')}</p><form><fieldset aria-labelledby="question"><legend class="sr-only">${html('hint')}</legend><div class="answers">${answers}</div></fieldset><div class="submit-row"><p class="vote-hint">${html('hint')}</p><button class="primary-btn" ${!selected || !ready || busy ? 'disabled' : ''}>${html(busy ? 'sending' : 'submit')} <span aria-hidden="true">${html('submitArrow')}</span></button></div><p class="error" role="status">${failed ? html('error') : !ready ? html('loading') : ''}</p>${failed && !ready ? `<button type="button" id="retry" class="language">${html('retry')}</button>` : ''}</form>${textLink('/feedback', 'commentLink')}</section>`;
   main.querySelector('form').addEventListener('change', event => { selected = event.target.value; main.querySelector('.primary-btn').disabled = !ready || busy; });
   main.querySelector('form').addEventListener('submit', submit);
   main.querySelector('#retry')?.addEventListener('click', session);
@@ -50,6 +67,27 @@ async function session() {
   failed = false; render();
   try { const response = await api('/api/session'); voted = (await response.json()).voted; ready = true; } catch { failed = true; }
   render();
+}
+async function feedbackSession() {
+  failed = false; render();
+  try { const response = await api('/api/session'); feedbackSent = Boolean((await response.json()).feedback); ready = true; } catch { failed = true; }
+  render();
+}
+async function sendFeedback(event) {
+  event.preventDefault();
+  if (busy || feedbackSent || !ready) return;
+  const form = event.currentTarget;
+  feedbackDraft.email = form.email.value;
+  feedbackDraft.name = form.name.value;
+  feedbackDraft.comment = form.comment.value;
+  if (!form.reportValidity()) return;
+  busy = true; failed = false; render();
+  try {
+    await api('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: feedbackDraft.email.trim(), name: feedbackDraft.name.trim(), comment: feedbackDraft.comment.trim() }) });
+    feedbackSent = true;
+  } catch { failed = true; }
+  busy = false; render();
+  if (feedbackSent) main.querySelector('h1').focus();
 }
 async function submit(event) {
   event.preventDefault(); if (!selected || busy || !ready) return;
@@ -100,8 +138,9 @@ async function poll() {
 function start() {
   if (started) return;
   started = true;
-  render();
-  if (isResults) poll(); else session();
+  if (isResults) { render(); poll(); }
+  else if (isFeedback) feedbackSession();
+  else session();
 }
 document.querySelector('#language').addEventListener('click', async () => {
   const next = lang === 'en' ? 'ar' : 'en';

@@ -32,6 +32,18 @@
   "error": "Unable to connect. Please try again.",
   "retry": "Try again",
   "loading": "Connecting…",
+  "commentLink": "Add a comment",
+  "feedbackEyebrow": "Your comment",
+  "feedbackLead": "Share a comment with us.",
+  "emailLabel": "Email",
+  "nameLabel": "Name",
+  "commentLabel": "Comment",
+  "feedbackSubmit": "Send",
+  "feedbackSending": "Sending…",
+  "feedbackThanks": "Thank you.",
+  "feedbackThanksLead": "Your comment has been received.",
+  "feedbackError": "Unable to send your comment. Please try again.",
+  "backToPoll": "Back to the poll",
   "choices": [
     {
       "id": "safe_pathways",

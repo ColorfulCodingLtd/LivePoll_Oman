@@ -27,6 +27,23 @@ if (englishChoices.length !== arabicChoices.length || englishChoices.some(id => 
 }
 export const choices = englishChoices;
 
+function csvField(value) {
+  let text = String(value).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  if (/^[=+\-@\t]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function validFeedback(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const email = typeof input.email === 'string' ? input.email.trim() : '';
+  const name = typeof input.name === 'string' ? input.name.trim() : '';
+  const comment = typeof input.comment === 'string' ? input.comment.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim() : '';
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  if (!name || name.length > 120 || /[\u0000-\u001F]/.test(name)) return null;
+  if (!comment || comment.length > 2000 || /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(comment)) return null;
+  return { email, name, comment };
+}
+
 export async function createApp({ dataDir = process.env.DATA_DIR || path.join(root, 'data'), secureCookie = process.env.COOKIE_SECURE === 'true' } = {}) {
   await mkdir(dataDir, { recursive: true });
   const filename = path.join(dataDir, 'votes.json');
@@ -39,6 +56,31 @@ export async function createApp({ dataDir = process.env.DATA_DIR || path.join(ro
     state = { version: 1, voters: {} };
   }
   let queue = Promise.resolve();
+  const feedbackFile = path.join(dataDir, 'feedbacks.csv');
+  const feedbackDevicesFile = path.join(dataDir, 'feedback-devices.json');
+  let feedbackDevices;
+  try {
+    const stored = JSON.parse(await readFile(feedbackDevicesFile, 'utf8'));
+    if (stored.version !== 1 || !Array.isArray(stored.devices) || stored.devices.some(id => typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id))) throw new Error('Invalid feedback device file; restore from backup.');
+    feedbackDevices = new Set(stored.devices);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    feedbackDevices = new Set();
+  }
+  let feedbackQueue = Promise.resolve();
+  const writeDevices = async devices => {
+    await writeFile(`${feedbackDevicesFile}.tmp`, JSON.stringify({ version: 1, devices: [...devices] }), { mode: 0o600 });
+    await rename(`${feedbackDevicesFile}.tmp`, feedbackDevicesFile);
+  };
+  const appendFeedback = async record => {
+    let existing = '';
+    try { existing = await readFile(feedbackFile, 'utf8'); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    const line = [new Date().toISOString(), record.email, record.name, record.comment].map(csvField).join(',') + '\n';
+    const next = existing ? `${existing.endsWith('\n') ? existing : `${existing}\n`}${line}` : `\uFEFFsubmitted_at,email,name,comment\n${line}`;
+    await writeFile(`${feedbackFile}.tmp`, next, { mode: 0o600 });
+    await rename(`${feedbackFile}.tmp`, feedbackFile);
+  };
   const totals = () => {
     const counts = Object.fromEntries(choices.map(id => [id, 0]));
     for (const id of Object.values(state.voters)) counts[id]++;
@@ -55,7 +97,7 @@ export async function createApp({ dataDir = process.env.DATA_DIR || path.join(ro
       if (url.pathname === '/api/session' && req.method === 'GET') {
         const device = token || randomBytes(32).toString('hex');
         res.setHeader('Set-Cookie', `poll_device=${device}; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000${secureCookie ? '; Secure' : ''}`);
-        return json(200, { voted: Boolean(state.voters[device]) });
+        return json(200, { voted: Boolean(state.voters[device]), feedback: feedbackDevices.has(device) });
       }
       if (url.pathname === '/api/results' && req.method === 'GET') return json(200, totals());
       if (url.pathname === '/api/vote' && req.method === 'POST') {
@@ -79,10 +121,37 @@ export async function createApp({ dataDir = process.env.DATA_DIR || path.join(ro
         await operation;
         return;
       }
+      if (url.pathname === '/api/feedback') {
+        if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' });
+        if (!token) return json(403, { error: 'session_required' });
+        if (!(req.headers['content-type'] || '').startsWith('application/json')) return json(415, { error: 'json_required' });
+        if (req.headers['sec-fetch-site'] === 'cross-site') return json(403, { error: 'cross_site' });
+        let body = '';
+        for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body) > 16384) return json(413, { error: 'too_large' }); }
+        let input;
+        try { input = JSON.parse(body); } catch { return json(400, { error: 'invalid_json' }); }
+        const record = validFeedback(input);
+        if (!record) return json(400, { error: 'invalid_feedback' });
+        const operation = feedbackQueue.then(async () => {
+          if (feedbackDevices.has(token)) return json(409, { error: 'already_sent' });
+          const previous = feedbackDevices;
+          const nextDevices = new Set(previous);
+          nextDevices.add(token);
+          await writeDevices(nextDevices);
+          feedbackDevices = nextDevices;
+          try { await appendFeedback(record); }
+          catch (error) { await writeDevices(previous); feedbackDevices = previous; throw error; }
+          json(201, { saved: true });
+        });
+        feedbackQueue = operation.catch(() => {});
+        await operation;
+        return;
+      }
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(405, { error: 'method_not_allowed' });
       if (url.pathname === '/') { res.writeHead(302, { Location: '/vote' }); return res.end(); }
       const files = {
         '/vote': ['public', 'index.html', 'text/html; charset=utf-8'],
+        '/feedback': ['public', 'index.html', 'text/html; charset=utf-8'],
         '/results': ['public', 'index.html', 'text/html; charset=utf-8'],
         '/app.js': ['public', 'app.js', 'text/javascript; charset=utf-8'],
         '/styles.css': ['public', 'styles.css', 'text/css; charset=utf-8'],

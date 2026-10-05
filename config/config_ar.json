@@ -32,6 +32,18 @@
   "error": "تعذر الاتصال. يرجى المحاولة مرة أخرى.",
   "retry": "حاول مرة أخرى",
   "loading": "جارٍ الاتصال…",
+  "commentLink": "اضف ملاحظة",
+  "feedbackEyebrow": "ملاحظتك",
+  "feedbackLead": "شاركنا بملاحظتك.",
+  "emailLabel": "البريد الإلكتروني",
+  "nameLabel": "الاسم",
+  "commentLabel": "الملاحظة",
+  "feedbackSubmit": "إرسال",
+  "feedbackSending": "جارٍ الإرسال…",
+  "feedbackThanks": "شكراً لملاحظتك.",
+  "feedbackThanksLead": "تم استلام ملاحظتك.",
+  "feedbackError": "تعذر إرسال الملاحظة. يرجى المحاولة مرة أخرى.",
+  "backToPoll": "العودة إلى الاستطلاع",
   "choices": [
     {
       "id": "safe_pathways",
